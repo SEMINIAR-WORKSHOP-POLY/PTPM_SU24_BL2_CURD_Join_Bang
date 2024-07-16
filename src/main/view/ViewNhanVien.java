@@ -4,18 +4,56 @@
  */
 package main.view;
 
+import java.util.List;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.table.DefaultTableModel;
+import main.entity.ChucVu;
+import main.entity.NhanVien;
+import main.repository.ChucVuRepository;
+import main.repository.NhanVienRepository;
+
 /**
  *
  * @author hangnt
  */
 public class ViewNhanVien extends javax.swing.JFrame {
 
+    private DefaultComboBoxModel dcbm;
+
+    private ChucVuRepository chucVuRepository;
+
+    private DefaultTableModel dtm;
+
+    private NhanVienRepository nhanVienRepository;
+
     public ViewNhanVien() {
         initComponents();
-       
+        dcbm = (DefaultComboBoxModel) cbbChucVu.getModel();
+        dtm = (DefaultTableModel) tbNhanVien.getModel();
+        chucVuRepository = new ChucVuRepository();
+        nhanVienRepository = new NhanVienRepository();
+        showCombobox();
+        showDataTable(nhanVienRepository.getAll());
     }
 
-    
+    private void showDataTable(List<NhanVien> lists) {
+        dtm.setRowCount(0);
+        int index = 0;
+        for (NhanVien nv : lists) {
+            dtm.addRow(new Object[]{
+                index++, nv.getMa(), nv.getTen(), nv.getSdt(),
+                nv.getDiaChi(), nv.getChucVu().getTen(), nv.getGioiTinh()
+            });
+        }
+    }
+
+    private void showCombobox() {
+        dcbm.removeAllElements();
+        for (ChucVu cv : chucVuRepository.getAll()) {
+            dcbm.addElement(cv.getMa());
+        }
+    }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -210,21 +248,49 @@ public class ViewNhanVien extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnXoaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnXoaActionPerformed
-       
+        int index = tbNhanVien.getSelectedRow();
+        NhanVien nv = nhanVienRepository.getAll().get(index);
+        nhanVienRepository.remove(nv.getId());
+        showDataTable(nhanVienRepository.getAll());
     }//GEN-LAST:event_btnXoaActionPerformed
 
     private void btnThemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnThemActionPerformed
-        
+        nhanVienRepository.add(getFormData());
+        showDataTable(nhanVienRepository.getAll());
     }//GEN-LAST:event_btnThemActionPerformed
 
     private void btnSuaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSuaActionPerformed
-        
+        int index = tbNhanVien.getSelectedRow();
+        NhanVien nv = nhanVienRepository.getAll().get(index);
+        nhanVienRepository.update(nv.getId(), getFormData());
+        showDataTable(nhanVienRepository.getAll());
     }//GEN-LAST:event_btnSuaActionPerformed
 
     private void tbNhanVienMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tbNhanVienMouseClicked
+        int index = tbNhanVien.getSelectedRow();
+        NhanVien nv = nhanVienRepository.getAll().get(index);
+        txtDiaChi.setText(nv.getDiaChi());
+        txtMa.setText(nv.getMa());
+        txtSDT.setText(nv.getSdt());
+        txtTen.setText(nv.getTen());
+        cbbChucVu.setSelectedItem(nv.getChucVu().getMa());
+        // nv.getGioiTinh.equals("Nam") = true => rdNam selected, rdNu = !true => false 
+        // nv.getGioiTinh.equals("Nam") = false => rdNam false => k selected, rdNu = !false => true 
+        rdNam.setSelected(nv.getGioiTinh().equals("Nam"));
+        rdNu.setSelected(!nv.getGioiTinh().equals("Nam"));
     }//GEN-LAST:event_tbNhanVienMouseClicked
 
-   
+    private NhanVien getFormData() {
+        NhanVien nv = new NhanVien();
+        nv.setMa(txtMa.getText());
+        nv.setDiaChi(txtDiaChi.getText());
+        nv.setSdt(txtSDT.getText());
+        nv.setTen(txtTen.getText());
+        nv.setGioiTinh(rdNam.isSelected() == true ? "Nam" : "Nữ");
+        ChucVu cv = chucVuRepository.getChucVuByMa(cbbChucVu.getSelectedItem().toString());
+        nv.setChucVu(cv);
+        return nv;
+    }
 
     /**
      * @param args the command line arguments
